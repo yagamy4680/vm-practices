@@ -1,0 +1,12 @@
+#!/bin/bash
+
+function run {
+	echo "$@"
+	${BASH} -c "$@"
+}
+
+function entry {
+	run "vagrant destroy -f"
+}
+
+entry $@

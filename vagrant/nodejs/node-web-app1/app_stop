@@ -1,0 +1,21 @@
+#!/bin/bash
+
+function run {
+	echo "$@"
+	${BASH} -c "$@"
+}
+
+function entry {
+	local TMP=$(pwd)
+	cd $(dirname $0)
+	local DIR=$(pwd)
+	local IMAGE=$(basename ${DIR})
+	cd ${TMP}
+
+	local IMAGES=($(docker inspect --format='{{.Name}}' $(docker ps -aq --no-trunc) | xargs -I{} sh -c "basename {}"))
+	for image in "${IMAGES[@]}"; do
+		run "docker stop ${image}" && run "docker rm ${image}"
+	done
+}
+
+entry $@

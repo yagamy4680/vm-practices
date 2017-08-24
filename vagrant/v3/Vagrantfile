@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+
+# Select the FIRST-priority interface on the dedicated server to bridge.
+VM_INTERFACES = %x( VBoxManage list bridgedifs | grep ^Name ).gsub(/Name:\s+/, '').split("\n")
+
+# Extra public/bridged ethernet interface for guest system
+VBOX_NETIF = VM_INTERFACES[0]
+
+# VBOX Name
+PROJECT_NAME = File.basename(Dir.getwd)
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ailispaw/barge"
+  config.vm.hostname = "#{PROJECT_NAME}-1"
+  config.vm.provision "shell", inline: "docker run --name aaa --net=host -d yagamy/node-web-app2"
+
+  config.vm.define "echonet1" do |e1|
+    e1.vm.hostname = "#{PROJECT_NAME}-e1"
+	e1.vm.network "public_network", use_dhcp_assigned_default_route: true, bridge: VBOX_NETIF, mac: "0A0C89FF0001"
+  end
+
+  config.vm.define "echonet2" do |e2|
+    e2.vm.hostname = "#{PROJECT_NAME}-e2"
+	e2.vm.network "public_network", use_dhcp_assigned_default_route: true, bridge: VBOX_NETIF, mac: "0A0C89FF0002"
+  end
+end

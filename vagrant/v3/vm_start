@@ -1,0 +1,25 @@
+#!/bin/bash
+
+function run {
+	echo "$@"
+	${BASH} -c "$@"
+}
+
+function entry {
+	local VM=$1
+	run "vagrant up ${VM}" || exit 1
+	echo "get vm's public ip..."
+	local IP=$(vagrant ssh ${VM} -c "ifconfig eth1" | grep "inet addr:" | awk '{print $2}' | awk -F':' '{print $2}')
+	echo "public ethernet interface (eth1) in Virtualbox:"
+	echo "  ip : $(http http://${IP}:8080/interfaces | jq '.eth1 | .[0] | .address')"
+	echo "  mac: $(http http://${IP}:8080/interfaces | jq '.eth1 | .[0] | .mac')"
+	echo ""
+	echo "you can run following commands for references:"
+	echo "  http http://${IP}:8080/interfaces"
+	echo "  http http://${IP}:8080/hostname"
+	echo "  vagrant ssh -c 'ifconfig -a'"
+}
+
+for i in {1..2}; do
+	entry "echonet$i"
+done
